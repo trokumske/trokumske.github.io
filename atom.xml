@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-01-24T06:27:18.055Z</updated>
+  <updated>2019-02-28T02:46:55.266Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,53 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>总结个人远程连接并操作hbase的心得及操作过程中遇到的几种问题</title>
+    <link href="http://yoursite.com/2019/02/28/%E6%80%BB%E7%BB%93%E4%B8%AA%E4%BA%BA%E8%BF%9C%E7%A8%8B%E8%BF%9E%E6%8E%A5%E5%B9%B6%E6%93%8D%E4%BD%9Chbase%E7%9A%84%E5%BF%83%E5%BE%97%E5%8F%8A%E6%93%8D%E4%BD%9C%E8%BF%87%E7%A8%8B%E4%B8%AD%E9%81%87%E5%88%B0%E7%9A%84%E5%87%A0%E7%A7%8D%E9%97%AE%E9%A2%98-1/"/>
+    <id>http://yoursite.com/2019/02/28/总结个人远程连接并操作hbase的心得及操作过程中遇到的几种问题-1/</id>
+    <published>2019-02-28T02:25:09.000Z</published>
+    <updated>2019-02-28T02:46:55.266Z</updated>
+    
+    <content type="html"><![CDATA[<p>win10系统上java远程连接hbase个人操作步骤及所遇问题记录博客</p><p> 1.通过hbase-client访问HBase</p><pre><code> 构建Maven项目依赖&lt;dependencies&gt;    &lt;dependency&gt;    &lt;groupId&gt;org.apache.hbase&lt;/groupId&gt;    &lt;artifactId&gt;hbase-client&lt;/artifactId&gt;    &lt;version&gt;1.2.6&lt;/version&gt;    &lt;/dependency&gt;&lt;/dependencies&gt;maven配置的是阿里云的库，不知道是不是长的好看的原因并没有下载下来这个包，还是找基友出卖色相帮我从别的地方下载下来的。链接如下：</code></pre><p>2.代码展示</p><p>package com.nari.hbase;<br>import java.io.IOException;<br>import org.apache.commons.lang.ArrayUtils;<br>import org.apache.commons.lang.StringUtils;<br>import org.apache.hadoop.conf.Configuration;<br>import org.apache.hadoop.hbase.HBaseConfiguration;<br>import org.apache.hadoop.hbase.HColumnDescriptor;<br>import org.apache.hadoop.hbase.HTableDescriptor;<br>import org.apache.hadoop.hbase.TableName;<br>import org.apache.hadoop.hbase.client.Connection;<br>import org.apache.hadoop.hbase.client.ConnectionFactory;<br>import org.apache.hadoop.hbase.client.HBaseAdmin;<br>import org.apache.hadoop.hbase.client.HTable;<br>import org.apache.hadoop.hbase.client.Put;<br>import org.apache.hadoop.hbase.util.Bytes;</p><p>public class HBaseTestDemo {<br>    static Configuration conf = null;<br>    static Connection conn = null;</p><pre><code>static {    try {        conf = HBaseConfiguration.create();         conf.set(&quot;hbase.zookeeper.property.clientPort&quot;, &quot;2181&quot;);        conf.set(&quot;hbase.zookeeper.quorum&quot;, &quot;hadoop15,hadoop16,hadoop17&quot;);        //conf.set(&quot;zookeeper.znode.parent&quot;,&quot;/hbase-unsecure&quot;);        conn = ConnectionFactory.createConnection(conf);    } catch (Exception e) {        e.printStackTrace();    }}/** * 创建表 * * @param tableName * @param family * @throws Exception */public static void createTable(String tableName, String[] family)        throws Exception {    if(StringUtils.isEmpty(tableName)) {        return;    }    if(ArrayUtils.isEmpty(family)) {        return;    }    HBaseAdmin admin = (HBaseAdmin) conn.getAdmin();    // 表 HTableDescriptor 列 HColumnDescriptor    HTableDescriptor desc = new HTableDescriptor(TableName.valueOf(tableName));    for (int i = 0; i &lt; family.length; i++) {        desc.addFamily(new HColumnDescriptor(family[i]));    }    if (admin.tableExists(tableName)) {        System.out.println(&quot;table Exists!&quot;);    } else {        admin.createTable(desc);        System.out.println(&quot;create table Success!&quot;);    }    admin.close();}/** * 插入(更新)数据 * * @param rowKey * @param tableName * @param family * @param qualifier * @param value * @throws IOException */public static void putData(String rowKey, String tableName, byte[] family, byte[] qualifier, byte[] value) throws IOException {    if (StringUtils.isEmpty(rowKey) || StringUtils.isEmpty(tableName)) {        return;    }    if (ArrayUtils.isEmpty(family) || ArrayUtils.isEmpty(qualifier)) {        return;    }    Put put = new Put(Bytes.toBytes(rowKey));    HTable table = (HTable) conn.getTable(TableName.valueOf(tableName));    // byte[] family, byte[] qualifier, byte[] value    put.addColumn(family, qualifier, value);    table.put(put);    System.out.println(&quot;add data Success!&quot;);    table.close();}/** * 删除表 * * @param tableName * @throws IOException */public static void deteleTable(String tableName) throws IOException {    HBaseAdmin admin = (HBaseAdmin) conn.getAdmin();    admin.disableTable(tableName);    admin.deleteTable(tableName);    admin.close();}public static void main(String[] args) {    String str[]={&quot;test1&quot;,&quot;test2&quot;};    try {        HBaseTestDemo.createTable(&quot;e_data_testj&quot;, str);    } catch (Exception e) {        // TODO Auto-generated catch block        e.printStackTrace();    }}</code></pre><p>}</p><p>3.所遇问题总结。</p><pre><code>配完maven后，代码也写上了，剩下来的就是测试连接咯。</code></pre><p>   1.<br><img src="\\images\1.png\" alt="upload successful"></p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;win10系统上java远程连接hbase个人操作步骤及所遇问题记录博客&lt;/p&gt;
+&lt;p&gt; 1.通过hbase-client访问HBase&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt; 构建Maven项目依赖
+&amp;lt;dependencies&amp;gt;
+    &amp;lt;dependency&amp;
+      
+    
+    </summary>
+    
+    
+  </entry>
+  
+  <entry>
+    <title>1/25</title>
+    <link href="http://yoursite.com/2019/01/25/1-25-1/"/>
+    <id>http://yoursite.com/2019/01/25/1-25-1/</id>
+    <published>2019-01-25T02:49:12.000Z</published>
+    <updated>2019-01-25T02:51:47.555Z</updated>
+    
+    <content type="html"><![CDATA[<p>总结一下工作中遇到的/与\的问题。</p><p>一般可以认为是”/“的作用等同于”\“<br>具体使用中都可以达到访问路径的效果，只不过有一点小区别<br>正斜杠的话，一般在配置文件路径时，指向下一个路径只要使用一个<br>例如：”c:/a/1.txt”;<br>而反斜杠的话，在配置文件路径时，由于它本身在java中有特殊意义，作为转义符而存在，所以具体意义上的反斜杠要两个<br>例如：”c\a\1.txt”;这里的第一个反斜杠是作为转义符存在的，第二个才是真正意义上的反斜杠</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;总结一下工作中遇到的/与\的问题。&lt;/p&gt;
+&lt;p&gt;一般可以认为是”/“的作用等同于”\“&lt;br&gt;具体使用中都可以达到访问路径的效果，只不过有一点小区别&lt;br&gt;正斜杠的话，一般在配置文件路径时，指向下一个路径只要使用一个&lt;br&gt;例如：”c:/a/1.txt”;&lt;br&gt;而反斜杠
+      
+    
+    </summary>
+    
+    
+  </entry>
   
   <entry>
     <title>Jsong-first_blog</title>
